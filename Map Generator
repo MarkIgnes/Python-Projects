@@ -1,0 +1,1189 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using Random = UnityEngine.Random;
+using System.Linq;
+using UnityEngine.XR;
+using Newtonsoft.Json.Linq;
+using System.Threading;
+
+
+public class Procedural_Test : MonoBehaviour
+{
+    [SerializeField]
+    GameObject Tile_0, Tile_1, Tile_2, Tile_3, Tile_4, Tile_5, Tile_6, Tile_7,
+            Tile_8, Tile_9, Tile_10, Tile_11, Tile_12, Tile_13, Tile_14, Tile_15;
+    public GameObject player;
+    public GameObject Floor_W;
+    private float ScaleFactor = 3f;
+    private int GridLength = 6;
+    private int Max_Horizontal = 6;
+    private int Max_Vertical = 6;
+    private int GridSize = 36;
+    // Start is called before the first frame update
+    private void Start()
+    {
+        //Generate_Grid(GridSize);
+        Generate_Areas(Generate_Grid(GridSize, GridLength), GridSize, Max_Horizontal, Max_Vertical);
+    }
+    int[,] Generate_Grid(int GS, int GL)
+    {
+
+        //  Declarations
+        float TileScaleOffset = .5f * ScaleFactor;
+        float tilesize = 8;
+        GameObject[] fullSet = new GameObject[] {Tile_0, Tile_1, Tile_2, Tile_3, Tile_4, Tile_5, Tile_6, Tile_7,
+            Tile_8, Tile_9, Tile_10, Tile_11, Tile_12, Tile_13, Tile_14, Tile_15};
+
+        int randomIndex4;
+        int randomIndex2;
+
+        //Index 4's
+        int[] topPlusLeft = new int[] { 0, 1, 8, 9 };
+        int[] topPlusRight = new int[] { 0, 1, 2, 3 };
+        int[] bottomPlusLeft = new int[] { 0, 4, 8, 12 };
+        int[] bottomPlusRight = new int[] { 0, 2, 4, 6 };
+        int[] btmLeftAdjTop = new int[] { 1, 5, 9, 13 };
+        int[] btmLeftAdjRight = new int[] { 2, 6, 10, 14 };
+        int[] topLeftAdjBtm = new int[] { 4, 5, 12, 13 };
+        int[] topLeftAdjRight = new int[] { 2, 3, 10, 11 };
+        int[] bottomRightAdjLeft = new int[] { 8, 10, 12, 14 };
+        int[] bottomRightAdjTop = new int[] { 1, 3, 5, 7 };
+        int[] topRightAdjLeft = new int[] { 8, 9, 10, 11 };
+        int[] topRightAdjBottom = new int[] { 4, 5, 6, 7 };
+        int[] midFillOpen = new int[] { 3, 7, 11, 15 };
+
+        int[] zeroOneTwo = new int[] { 0, 4 };
+        int[] zeroOneThree = new int[] { 0, 8 };
+        int[] zeroTwoThree = new int[] { 0, 2 };
+        int[] oneTwoThree = new int[] { 0, 1 };
+        int[] oneNine = new int[] { 1, 9 };
+        int[] fourTwelve = new int[] { 4, 12 };
+        int[] fiveThirteen = new int[] { 5, 13 };
+        int[] twoSix = new int[] { 2, 6 };
+        int[] eightTwelve = new int[] { 8, 12 };
+        int[] tenFourteen = new int[] { 10, 14 };
+        int[] twoThree = new int[] { 2, 3 };
+        int[] eightNine = new int[] { 8, 9 };
+        int[] tenEleven = new int[] { 10, 11 };
+        int[] oneThree = new int[] { 1, 3 };
+        int[] fourSix = new int[] { 4, 6 };
+        int[] fiveSeven = new int[] { 5, 7 };
+        int[] twoTen = new int[] { 2, 10 };
+        int[] sixFourteen = new int[] { 6, 14 };
+        int[] threeEleven = new int[] { 3, 11 };
+        int[] sevenFifteen = new int[] { 7, 15 };
+        int[] oneFive = new int[] { 1, 5 };
+        int[] nineThirteen = new int[] { 9, 13 };
+        int[] threeSeven = new int[] { 3, 7 };
+        int[] elevenFifteen = new int[] { 11, 15 };
+
+
+        /*------------------------------------------------------------------------------*/
+        // Grid computation below this line //
+
+        //These variables will be your grid dimensions
+        int x = GL, y = GL;
+        int gridSize = GS;
+        Debug.Log("gridSize = " + gridSize);
+
+        //Declaration of grid array
+        int[,] GRIDY = new int[gridSize, 3];
+
+        for (int i = 0; i < gridSize; i++)
+        {
+            GRIDY[i, 2] = -1;
+            Debug.Log("Assigning -1 to slot " + i);
+        }
+
+        //BotLeft Corner
+        randomIndex4 = Random.Range(0, 4);
+        GRIDY[0, 2] = bottomPlusLeft[randomIndex4];
+        GRIDY[0, 0] = 0;
+        GRIDY[0, 1] = 0;
+        //TopLeft Corner
+        randomIndex4 = Random.Range(0, 4);
+        GRIDY[x - 1, 2] = topPlusLeft[randomIndex4];
+        GRIDY[x - 1, 0] = 0;
+        GRIDY[x - 1, 1] = x - 1;
+        //BottomRight Corner
+        randomIndex4 = Random.Range(0, 4);
+        GRIDY[gridSize - y, 2] = bottomPlusRight[randomIndex4];
+        GRIDY[gridSize - y, 0] = y - 1;
+        GRIDY[gridSize - y, 1] = 0;
+        //TopRight Corner
+        randomIndex4 = Random.Range(0, 4);
+        GRIDY[gridSize - 1, 2] = topPlusRight[randomIndex4];
+        GRIDY[gridSize - 1, 0] = y - 1;
+        GRIDY[gridSize - 1, 1] = y - 1;
+
+
+        // -----------------------CORNER ADJs------------------------------ // 
+
+
+        // ------ Bottom Left ------ //
+
+        //For BL adj. Top ------------------------------------
+        if (GRIDY[0, 2] == 0 || GRIDY[0, 2] == 8)
+        {
+            randomIndex4 = Random.Range(0, 4);
+            GRIDY[1, 2] = bottomPlusLeft[randomIndex4];
+            GRIDY[1, 0] = 0;
+            GRIDY[1, 1] = 1;
+        }
+        else if (GRIDY[0, 2] == 4 || GRIDY[0, 2] == 12)
+        {
+            randomIndex4 = Random.Range(0, 4);
+            GRIDY[1, 2] = btmLeftAdjTop[randomIndex4];
+            GRIDY[1, 0] = 0;
+            GRIDY[1, 1] = 1;
+        }
+
+        //For BL adj. Right ------------------------------------
+        if (GRIDY[0, 2] == 0 || GRIDY[0, 2] == 4)
+        {
+            randomIndex4 = Random.Range(0, 4);
+            GRIDY[x, 2] = bottomPlusLeft[randomIndex4];
+            GRIDY[x, 0] = 1;
+            GRIDY[x, 1] = 0;
+        }
+        else if (GRIDY[0, 2] == 8 || GRIDY[0, 2] == 12)
+        {
+            randomIndex4 = Random.Range(0, 4);
+            GRIDY[x, 2] = btmLeftAdjRight[randomIndex4];
+            GRIDY[x, 0] = 1;
+            GRIDY[x, 1] = 0;
+        }
+
+
+        // ------ Top Left ------ //
+
+        //For TL adj. Bottom ------------------------------------ !!!!!!!!!!!!!!!!!!!!!! ONLY IF GRID Y SIZE IS >= 5 !!!!!!!!!!!!!!!!!!!!!!!!
+        if ((GRIDY[x - 1, 2] == 0 || GRIDY[x - 1, 2] == 8) && (y >= 5))
+        {
+            randomIndex4 = Random.Range(0, 4);
+            GRIDY[x - 2, 2] = topPlusLeft[randomIndex4];
+            GRIDY[x - 2, 0] = 0;
+            GRIDY[x - 2, 1] = x - 2;
+        }
+        else if ((GRIDY[x - 1, 2] == 1 || GRIDY[x - 1, 2] == 9) && (y >= 5))
+        {
+            randomIndex4 = Random.Range(0, 4);
+            GRIDY[x - 2, 2] = topLeftAdjBtm[randomIndex4];
+            GRIDY[x - 2, 0] = 0;
+            GRIDY[x - 2, 1] = x - 2;
+        }
+        //For TL adj. Bottom ------------------------------------ IF GRID Y SIZE IS 4
+        if ((GRIDY[x - 1, 2] == 0 || GRIDY[x - 1, 2] == 8) && ((GRIDY[1, 2] == 0) || (GRIDY[1, 2] == 1) || (GRIDY[1, 2] == 8) || (GRIDY[1, 2] == 9)) && (y == 4 && x == 4))
+        {
+            randomIndex2 = Random.Range(0, 2);
+            GRIDY[x - 2, 2] = zeroOneThree[randomIndex2];
+            GRIDY[x - 2, 0] = 0;
+            GRIDY[x - 2, 1] = y - 2;
+        }
+        else if ((GRIDY[x - 1, 2] == 0 || GRIDY[x - 1, 2] == 8) && ((GRIDY[1, 2] == 4) || (GRIDY[1, 2] == 5) || (GRIDY[1, 2] == 12) || (GRIDY[1, 2] == 13)) && (y == 4 && x == 4))
+        {
+            randomIndex2 = Random.Range(0, 2);
+            GRIDY[x - 2, 2] = oneNine[randomIndex2];
+            GRIDY[x - 2, 0] = 0;
+            GRIDY[x - 2, 1] = y - 2;
+        }
+        else if ((GRIDY[x - 1, 2] == 1 || GRIDY[x - 1, 2] == 9) && ((GRIDY[1, 2] == 0) || (GRIDY[1, 2] == 1) || (GRIDY[1, 2] == 8) || (GRIDY[1, 2] == 9)) && (y == 4 && x == 4))
+        {
+            randomIndex2 = Random.Range(0, 2);
+            GRIDY[x - 2, 2] = fourTwelve[randomIndex2];
+            GRIDY[x - 2, 0] = 0;
+            GRIDY[x - 2, 1] = y - 2;
+        }
+        else if ((GRIDY[x - 1, 2] == 1 || GRIDY[x - 1, 2] == 9) && ((GRIDY[1, 2] == 4) || (GRIDY[1, 2] == 5) || (GRIDY[1, 2] == 12) || (GRIDY[1, 2] == 13)) && (y == 4 && x == 4))
+        {
+            randomIndex2 = Random.Range(0, 2);
+            GRIDY[x - 2, 2] = fiveThirteen[randomIndex2];
+            GRIDY[x - 2, 0] = 0;
+            GRIDY[x - 2, 1] = y - 2;
+        }
+
+        //For TL adj. Right ------------------------------------
+        if ((GRIDY[x - 1, 2] == 0 || GRIDY[x - 1, 2] == 1))
+        {
+            randomIndex4 = Random.Range(0, 4);
+            GRIDY[x * 2 - 1, 2] = topPlusLeft[randomIndex4];
+            GRIDY[x * 2 - 1, 0] = 1;
+            GRIDY[x * 2 - 1, 1] = x - 1;
+        }
+        else if ((GRIDY[x - 1, 2] == 8 || GRIDY[x - 1, 2] == 9))
+        {
+            randomIndex4 = Random.Range(0, 4);
+            GRIDY[x * 2 - 1, 2] = topLeftAdjRight[randomIndex4];
+            GRIDY[x * 2 - 1, 0] = 1;
+            GRIDY[x * 2 - 1, 1] = x - 1;
+        }
+
+
+        // ------ Bottom Right ------ //
+
+        //For BR adj. Left ------------------------------------ !!!!!!!!!!!!!!!!!!!!!! ONLY IF GRID Y SIZE IS >= 5 !!!!!!!!!!!!!!!!!!!!!!!!
+        if ((GRIDY[gridSize - y, 2] == 0 || GRIDY[gridSize - y, 2] == 4) && (y >= 5))
+        {
+            randomIndex4 = Random.Range(0, 4);
+            GRIDY[gridSize - (x * 2), 2] = bottomPlusRight[randomIndex4];
+            GRIDY[gridSize - (x * 2), 0] = x - 2;
+            GRIDY[gridSize - (x * 2), 1] = 0;
+        }
+        else if ((GRIDY[gridSize - y, 2] == 2 || GRIDY[gridSize - y, 2] == 6) && (y >= 5))
+        {
+            randomIndex4 = Random.Range(0, 4);
+            GRIDY[gridSize - (x * 2), 2] = bottomRightAdjLeft[randomIndex4];
+            GRIDY[gridSize - (x * 2), 0] = x - 2;
+            GRIDY[gridSize - (x * 2), 1] = 0;
+        }
+        //For BR adj. Left ------------------------------------ IF GRID Y SIZE IS 4
+        if ((GRIDY[gridSize - x, 2] == 0 || GRIDY[gridSize - x, 2] == 4) && ((GRIDY[x, 2] == 0) || (GRIDY[x, 2] == 2) || (GRIDY[x, 2] == 4) || (GRIDY[x, 2] == 6)) && (y == 4 && x == 4))
+        {
+            randomIndex2 = Random.Range(0, 2);
+            GRIDY[gridSize - (x * 2), 2] = zeroOneTwo[randomIndex2];
+            GRIDY[gridSize - (x * 2), 0] = x - 2;
+            GRIDY[gridSize - (x * 2), 1] = 0;
+        }
+        else if ((GRIDY[gridSize - x, 2] == 0 || GRIDY[gridSize - x, 2] == 4) && ((GRIDY[x, 2] == 8) || (GRIDY[x, 2] == 10) || (GRIDY[x, 2] == 12) || (GRIDY[x, 2] == 14)) && (y == 4 && x == 4))
+        {
+            randomIndex2 = Random.Range(0, 2);
+            GRIDY[gridSize - (x * 2), 2] = twoSix[randomIndex2];
+            GRIDY[gridSize - (x * 2), 0] = x - 2;
+            GRIDY[gridSize - (x * 2), 1] = 0;
+        }
+        if ((GRIDY[gridSize - x, 2] == 2 || GRIDY[gridSize - x, 2] == 6) && ((GRIDY[x, 2] == 0) || (GRIDY[x, 2] == 2) || (GRIDY[x, 2] == 4) || (GRIDY[x, 2] == 6)) && (y == 4 && x == 4))
+        {
+            randomIndex2 = Random.Range(0, 2);
+            GRIDY[gridSize - (x * 2), 2] = eightTwelve[randomIndex2];
+            GRIDY[gridSize - (x * 2), 0] = x - 2;
+            GRIDY[gridSize - (x * 2), 1] = 0;
+        }
+        else if ((GRIDY[gridSize - x, 2] == 2 || GRIDY[gridSize - x, 2] == 6) && ((GRIDY[x, 2] == 8) || (GRIDY[x, 2] == 10) || (GRIDY[x, 2] == 12) || (GRIDY[x, 2] == 14)) && (y == 4 && x == 4))
+        {
+            randomIndex2 = Random.Range(0, 2);
+            GRIDY[gridSize - (x * 2), 2] = tenFourteen[randomIndex2];
+            GRIDY[gridSize - (x * 2), 0] = x - 2;
+            GRIDY[gridSize - (x * 2), 1] = 0;
+        }
+
+        //For BR adj. Top ------------------------------------
+        if ((GRIDY[gridSize - y, 2] == 0 || GRIDY[gridSize - y, 2] == 2))
+        {
+            randomIndex4 = Random.Range(0, 4);
+            GRIDY[gridSize - (y - 1), 2] = bottomPlusRight[randomIndex4];
+            GRIDY[gridSize - (y - 1), 0] = x - 1;
+            GRIDY[gridSize - (y - 1), 1] = 1;
+        }
+        else if ((GRIDY[gridSize - y, 2] == 4 || GRIDY[gridSize - y, 2] == 6))
+        {
+            randomIndex4 = Random.Range(0, 4);
+            GRIDY[gridSize - (y - 1), 2] = bottomRightAdjTop[randomIndex4];
+            GRIDY[gridSize - (y - 1), 0] = x - 1;
+            GRIDY[gridSize - (y - 1), 1] = 1;
+        }
+
+
+        // ------ Top Right ------ //
+
+        //For TR adj. Left ------------------------------------ !!!!!!!!!!!!!!!!!!!!!! ONLY IF GRID Y SIZE IS >= 5 !!!!!!!!!!!!!!!!!!!!!!!!
+        if ((GRIDY[gridSize - 1, 2] == 0 || GRIDY[gridSize - 1, 2] == 1) && ((x >= 5) && (y >= 5)))
+        {
+            randomIndex4 = Random.Range(0, 4);
+            GRIDY[gridSize - (y + 1), 2] = topPlusRight[randomIndex4];
+            GRIDY[gridSize - (y + 1), 0] = x - 2;
+            GRIDY[gridSize - (y + 1), 1] = y - 1;
+        }
+        else if ((GRIDY[gridSize - 1, 2] == 2 || GRIDY[gridSize - 1, 2] == 3) && ((x >= 5) && (y >= 5)))
+        {
+            randomIndex4 = Random.Range(0, 4);
+            GRIDY[gridSize - (y + 1), 2] = topRightAdjLeft[randomIndex4];
+            GRIDY[gridSize - (y + 1), 0] = x - 2;
+            GRIDY[gridSize - (y + 1), 1] = y - 1;
+        }
+        //For TR adj. Left ------------------------------------ IF GRID Y SIZE IS 4
+        if ((GRIDY[gridSize - 1, 2] == 0 || GRIDY[gridSize - 1, 2] == 1) && ((GRIDY[(x * 2) - 1, 2] == 0) || (GRIDY[(x * 2) - 1, 2] == 1) || (GRIDY[(x * 2) - 1, 2] == 2) || (GRIDY[(x * 2) - 1, 2] == 3)) && (y == 4 && x == 4))
+        {
+            randomIndex2 = Random.Range(0, 2);
+            GRIDY[gridSize - (y + 1), 2] = oneTwoThree[randomIndex2];
+            GRIDY[gridSize - (y + 1), 0] = x - 2;
+            GRIDY[gridSize - (y + 1), 1] = y - 1;
+        }
+        else if ((GRIDY[gridSize - 1, 2] == 0 || GRIDY[gridSize - 1, 2] == 1) && ((GRIDY[(x * 2) - 1, 2] == 8) || (GRIDY[(x * 2) - 1, 2] == 9) || (GRIDY[(x * 2) - 1, 2] == 10) || (GRIDY[(x * 2) - 1, 2] == 11)) && (y == 4 && x == 4))
+        {
+            randomIndex2 = Random.Range(0, 2);
+            GRIDY[gridSize - (y + 1), 2] = twoThree[randomIndex2];
+            GRIDY[gridSize - (y + 1), 0] = x - 2;
+            GRIDY[gridSize - (y + 1), 1] = y - 1;
+        }
+        else if ((GRIDY[gridSize - 1, 2] == 2 || GRIDY[gridSize - 1, 2] == 3) && ((GRIDY[(x * 2) - 1, 2] == 0) || (GRIDY[(x * 2) - 1, 2] == 1) || (GRIDY[(x * 2) - 1, 2] == 2) || (GRIDY[(x * 2) - 1, 2] == 3)) && (y == 4 && x == 4))
+        {
+            randomIndex2 = Random.Range(0, 2);
+            GRIDY[gridSize - (y + 1), 2] = eightNine[randomIndex2];
+            GRIDY[gridSize - (y + 1), 0] = x - 2;
+            GRIDY[gridSize - (y + 1), 1] = y - 1;
+        }
+        else if ((GRIDY[gridSize - 1, 2] == 2 || GRIDY[gridSize - 1, 2] == 3) && ((GRIDY[(x * 2) - 1, 2] == 8) || (GRIDY[(x * 2) - 1, 2] == 9) || (GRIDY[(x * 2) - 1, 2] == 10) || (GRIDY[(x * 2) - 1, 2] == 11)) && (y == 4 && x == 4))
+        {
+            randomIndex2 = Random.Range(0, 2);
+            GRIDY[gridSize - (y + 1), 2] = tenEleven[randomIndex2];
+            GRIDY[gridSize - (y + 1), 0] = x - 2;
+            GRIDY[gridSize - (y + 1), 1] = y - 1;
+        }
+
+
+        //For TR adj. Bottom ------------------------------------ !!!!!!!!!!!!!!!!!!!!!! ONLY IF GRID Y SIZE IS >= 5 !!!!!!!!!!!!!!!!!!!!!!!!
+        if ((GRIDY[gridSize - 1, 2] == 0 || GRIDY[gridSize - 1, 2] == 2) && ((x >= 5) && (y >= 5)))
+        {
+            randomIndex4 = Random.Range(0, 4);
+            GRIDY[gridSize - 2, 2] = topPlusRight[randomIndex4];
+            GRIDY[gridSize - 2, 0] = x - 1;
+            GRIDY[gridSize - 2, 1] = y - 2;
+        }
+        else if ((GRIDY[gridSize - 1, 2] == 1 || GRIDY[gridSize - 1, 2] == 3) && ((x >= 5) && (y >= 5)))
+        {
+            randomIndex4 = Random.Range(0, 4);
+            GRIDY[gridSize - 2, 2] = topRightAdjBottom[randomIndex4];
+            GRIDY[gridSize - 2, 0] = x - 1;
+            GRIDY[gridSize - 2, 1] = y - 2;
+        }
+        //For TR adj. Bottom ------------------------------------ IF GRID Y SIZE IS 4
+        if ((GRIDY[gridSize - 1, 2] == 0 || GRIDY[gridSize - 1, 2] == 2) && ((GRIDY[gridSize - 3, 2] == 0) || (GRIDY[gridSize - 3, 2] == 1) || (GRIDY[gridSize - 3, 2] == 2) || (GRIDY[gridSize - 3, 2] == 3)) && (y == 4 && x == 4))
+        {
+            randomIndex2 = Random.Range(0, 2);
+            GRIDY[gridSize - 2, 2] = zeroTwoThree[randomIndex2];
+            GRIDY[gridSize - 2, 0] = x - 1;
+            GRIDY[gridSize - 2, 1] = y - 2;
+        }
+        else if ((GRIDY[gridSize - 1, 2] == 0 || GRIDY[gridSize - 1, 2] == 2) && ((GRIDY[gridSize - 3, 2] == 4) || (GRIDY[gridSize - 3, 2] == 5) || (GRIDY[gridSize - 3, 2] == 6) || (GRIDY[gridSize - 3, 2] == 7)) && (y == 4 && x == 4))
+        {
+            randomIndex2 = Random.Range(0, 2);
+            GRIDY[gridSize - 2, 2] = oneThree[randomIndex2];
+            GRIDY[gridSize - 2, 0] = x - 1;
+            GRIDY[gridSize - 2, 1] = y - 2;
+        }
+        else if ((GRIDY[gridSize - 1, 2] == 1 || GRIDY[gridSize - 1, 2] == 3) && ((GRIDY[gridSize - 3, 2] == 0) || (GRIDY[gridSize - 3, 2] == 1) || (GRIDY[gridSize - 3, 2] == 2) || (GRIDY[gridSize - 3, 2] == 3)) && (y == 4 && x == 4))
+        {
+            randomIndex2 = Random.Range(0, 2);
+            GRIDY[gridSize - 2, 2] = fourSix[randomIndex2];
+            GRIDY[gridSize - 2, 0] = x - 1;
+            GRIDY[gridSize - 2, 1] = y - 2;
+        }
+        else if ((GRIDY[gridSize - 1, 2] == 1 || GRIDY[gridSize - 1, 2] == 3) && ((GRIDY[gridSize - 3, 2] == 4) || (GRIDY[gridSize - 3, 2] == 5) || (GRIDY[gridSize - 3, 2] == 6) || (GRIDY[gridSize - 3, 2] == 7)) && (y == 4 && x == 4))
+        {
+            randomIndex2 = Random.Range(0, 2);
+            GRIDY[gridSize - 2, 2] = fiveSeven[randomIndex2];
+            GRIDY[gridSize - 2, 0] = x - 1;
+            GRIDY[gridSize - 2, 1] = y - 2;
+        }
+
+
+        //True Left ----------------------------------------------
+        int numOfTrueLeft = y - 4;
+        for (int i = 0; i <= numOfTrueLeft; i++)
+        {
+            if (GRIDY[3 + i, 2] == -1)
+            {
+                if (GRIDY[1 + i, 2] == 0 || GRIDY[1 + i, 2] == 1 || GRIDY[1 + i, 2] == 8 || GRIDY[1 + i, 2] == 9)
+                {
+                    randomIndex4 = Random.Range(0, 4);
+                    GRIDY[2 + i, 2] = bottomPlusLeft[randomIndex4];
+                    GRIDY[2 + i, 0] = 0;
+                    GRIDY[2 + i, 1] = 2 + i;
+                }
+                else if (GRIDY[1 + i, 2] == 4 || GRIDY[1 + i, 2] == 5 || GRIDY[1 + i, 2] == 12 || GRIDY[1 + i, 2] == 13)
+                {
+                    randomIndex4 = Random.Range(0, 4);
+                    GRIDY[2 + i, 2] = btmLeftAdjTop[randomIndex4];
+                    GRIDY[2 + i, 0] = 0;
+                    GRIDY[2 + i, 1] = 2 + i;
+                }
+            }
+            else if (((GRIDY[1 + i, 2] == 0 || GRIDY[1 + i, 2] == 1 || GRIDY[1 + i, 2] == 8 || GRIDY[1 + i, 2] == 9)) && ((GRIDY[3 + i, 2] == 0) || (GRIDY[3 + i, 2] == 4) || (GRIDY[3 + i, 2] == 8) || (GRIDY[3 + i, 2] == 12)))
+            {
+                randomIndex2 = Random.Range(0, 2);
+                GRIDY[2 + i, 2] = zeroOneThree[randomIndex2];
+                GRIDY[2 + i, 0] = 0;
+                GRIDY[2 + i, 1] = 2 + i;
+            }
+            else if (((GRIDY[1 + i, 2] == 0 || GRIDY[1 + i, 2] == 1 || GRIDY[1 + i, 2] == 8 || GRIDY[1 + i, 2] == 9)) && ((GRIDY[3 + i, 2] == 1) || (GRIDY[3 + i, 2] == 5) || (GRIDY[3 + i, 2] == 9) || (GRIDY[3 + i, 2] == 13)))
+            {
+                randomIndex2 = Random.Range(0, 2);
+                GRIDY[2 + i, 2] = fourTwelve[randomIndex2];
+                GRIDY[2 + i, 0] = 0;
+                GRIDY[2 + i, 1] = 2 + i;
+            }
+            else if (((GRIDY[1 + i, 2] == 4 || GRIDY[1 + i, 2] == 5 || GRIDY[1 + i, 2] == 12 || GRIDY[1 + i, 2] == 13)) && ((GRIDY[3 + i, 2] == 0) || (GRIDY[3 + i, 2] == 4) || (GRIDY[3 + i, 2] == 8) || (GRIDY[3 + i, 2] == 12)))
+            {
+                randomIndex2 = Random.Range(0, 2);
+                GRIDY[2 + i, 2] = oneNine[randomIndex2];
+                GRIDY[2 + i, 0] = 0;
+                GRIDY[2 + i, 1] = 2 + i;
+            }
+            else if (((GRIDY[1 + i, 2] == 4 || GRIDY[1 + i, 2] == 5 || GRIDY[1 + i, 2] == 12 || GRIDY[1 + i, 2] == 13)) && ((GRIDY[3 + i, 2] == 1) || (GRIDY[3 + i, 2] == 5) || (GRIDY[3 + i, 2] == 9) || (GRIDY[3 + i, 2] == 13)))
+            {
+                randomIndex2 = Random.Range(0, 2);
+                GRIDY[2 + i, 2] = fiveThirteen[randomIndex2];
+                GRIDY[2 + i, 0] = 0;
+                GRIDY[2 + i, 1] = 2 + i;
+            }
+        }
+
+        //True Bottom ----------------------------------------------
+        int numOfTrueBottom = x - 4;
+        for (int i = 0; i <= numOfTrueBottom; i++)
+        {
+            if (GRIDY[(i * x) + (x * 3), 2] == -1)
+            {
+                if (GRIDY[(i * x) + (x), 2] == 0 || GRIDY[(i * x) + (x), 2] == 2 || GRIDY[(i * x) + (x), 2] == 4 || GRIDY[(i * x) + (x), 2] == 6)
+                {
+                    randomIndex4 = Random.Range(0, 4);
+                    GRIDY[(i * x) + (x * 2), 2] = bottomPlusLeft[randomIndex4];
+                    GRIDY[(i * x) + (x * 2), 0] = i + 2;
+                    GRIDY[(i * x) + (x * 2), 1] = 0;
+                }
+                else if (GRIDY[(i * x) + (x), 2] == 8 || GRIDY[(i * x) + (x), 2] == 10 || GRIDY[(i * x) + (x), 2] == 12 || GRIDY[(i * x) + (x), 2] == 14)
+                {
+                    randomIndex4 = Random.Range(0, 4);
+                    GRIDY[(i * x) + (x * 2), 2] = btmLeftAdjRight[randomIndex4];
+                    GRIDY[(i * x) + (x * 2), 0] = i + 2;
+                    GRIDY[(i * x) + (x * 2), 1] = 0;
+                }
+            }
+            else if (((GRIDY[(i * x) + (x), 2] == 0 || GRIDY[(i * x) + (x), 2] == 2 || GRIDY[(i * x) + (x), 2] == 4 || GRIDY[(i * x) + (x), 2] == 6)) && ((GRIDY[(i * x) + (x * 3), 2] == 0) || (GRIDY[(i * x) + (x * 3), 2] == 4) || (GRIDY[(i * x) + (x * 3), 2] == 8) || (GRIDY[(i * x) + (x * 3), 2] == 12)))
+            {
+                randomIndex2 = Random.Range(0, 2);
+                GRIDY[(i * x) + (x * 2), 2] = zeroOneTwo[randomIndex2];
+                GRIDY[(i * x) + (x * 2), 0] = i + 2;
+                GRIDY[(i * x) + (x * 2), 1] = 0;
+            }
+            else if (((GRIDY[(i * x) + (x), 2] == 0 || GRIDY[(i * x) + (x), 2] == 2 || GRIDY[(i * x) + (x), 2] == 4 || GRIDY[(i * x) + (x), 2] == 6)) && ((GRIDY[(i * x) + (x * 3), 2] == 2) || (GRIDY[(i * x) + (x * 3), 2] == 6) || (GRIDY[(i * x) + (x * 3), 2] == 10) || (GRIDY[(i * x) + (x * 3), 2] == 14)))
+            {
+                randomIndex2 = Random.Range(0, 2);
+                GRIDY[(i * x) + (x * 2), 2] = eightTwelve[randomIndex2];
+                GRIDY[(i * x) + (x * 2), 0] = i + 2;
+                GRIDY[(i * x) + (x * 2), 1] = 0;
+            }
+            else if (((GRIDY[(i * x) + (x), 2] == 8 || GRIDY[(i * x) + (x), 2] == 10 || GRIDY[(i * x) + (x), 2] == 12 || GRIDY[(i * x) + (x), 2] == 14)) && ((GRIDY[(i * x) + (x * 3), 2] == 0) || (GRIDY[(i * x) + (x * 3), 2] == 4) || (GRIDY[(i * x) + (x * 3), 2] == 8) || (GRIDY[(i * x) + (x * 3), 2] == 12)))
+            {
+                randomIndex2 = Random.Range(0, 2);
+                GRIDY[(i * x) + (x * 2), 2] = twoSix[randomIndex2];
+                GRIDY[(i * x) + (x * 2), 0] = i + 2;
+                GRIDY[(i * x) + (x * 2), 1] = 0;
+            }
+            else if (((GRIDY[(i * x) + (x), 2] == 8 || GRIDY[(i * x) + (x), 2] == 10 || GRIDY[(i * x) + (x), 2] == 12 || GRIDY[(i * x) + (x), 2] == 14)) && ((GRIDY[(i * x) + (x * 3), 2] == 2) || (GRIDY[(i * x) + (x * 3), 2] == 6) || (GRIDY[(i * x) + (x * 3), 2] == 10) || (GRIDY[(i * x) + (x * 3), 2] == 14)))
+            {
+                randomIndex2 = Random.Range(0, 2);
+                GRIDY[(i * x) + (x * 2), 2] = tenFourteen[randomIndex2];
+                GRIDY[(i * x) + (x * 2), 0] = i + 2;
+                GRIDY[(i * x) + (x * 2), 1] = 0;
+            }
+        }
+
+        //True Top ----------------------------------------------
+        int numOfTrueTop = x - 4;
+        for (int i = 0; i <= numOfTrueTop; i++)
+        {
+            if (GRIDY[(i * x) + (x * 4) - 1, 2] == -1)
+            {
+                if (GRIDY[(i * x) + (x * 2) - 1, 2] == 0 || GRIDY[(i * x) + (x * 2) - 1, 2] == 1 || GRIDY[(i * x) + (x * 2) - 1, 2] == 2 || GRIDY[(i * x) + (x * 2) - 1, 2] == 3)
+                {
+                    randomIndex4 = Random.Range(0, 4);
+                    GRIDY[(i * x) + (x * 3) - 1, 2] = topPlusLeft[randomIndex4];
+                    GRIDY[(i * x) + (x * 3) - 1, 0] = i + 2;
+                    GRIDY[(i * x) + (x * 3) - 1, 1] = y - 1;
+                }
+                else if (GRIDY[(i * x) + (x * 2) - 1, 2] == 8 || GRIDY[(i * x) + (x * 2) - 1, 2] == 9 || GRIDY[(i * x) + (x * 2) - 1, 2] == 10 || GRIDY[(i * x) + (x * 2) - 1, 2] == 11)
+                {
+                    randomIndex4 = Random.Range(0, 4);
+                    GRIDY[(i * x) + (x * 3) - 1, 2] = topLeftAdjRight[randomIndex4];
+                    GRIDY[(i * x) + (x * 3) - 1, 0] = i + 2;
+                    GRIDY[(i * x) + (x * 3) - 1, 1] = y - 1;
+                }
+            }
+            else if (((GRIDY[(i * x) + (x * 2) - 1, 2] == 0 || GRIDY[(i * x) + (x * 2) - 1, 2] == 1 || GRIDY[(i * x) + (x * 2) - 1, 2] == 2 || GRIDY[(i * x) + (x * 2) - 1, 2] == 3)) && ((GRIDY[(i * x) + (x * 4) - 1, 2] == 0) || (GRIDY[(i * x) + (x * 4) - 1, 2] == 1) || (GRIDY[(i * x) + (x * 4) - 1, 2] == 8) || (GRIDY[(i * x) + (x * 4) - 1, 2] == 9)))
+            {
+                randomIndex2 = Random.Range(0, 2);
+                GRIDY[(i * x) + (x * 3) - 1, 2] = oneTwoThree[randomIndex2];
+                GRIDY[(i * x) + (x * 3) - 1, 0] = i + 2;
+                GRIDY[(i * x) + (x * 3) - 1, 1] = y - 1;
+            }
+            else if (((GRIDY[(i * x) + (x * 2) - 1, 2] == 0 || GRIDY[(i * x) + (x * 2) - 1, 2] == 1 || GRIDY[(i * x) + (x * 2) - 1, 2] == 2 || GRIDY[(i * x) + (x * 2) - 1, 2] == 3)) && ((GRIDY[(i * x) + (x * 4) - 1, 2] == 2) || (GRIDY[(i * x) + (x * 4) - 1, 2] == 3) || (GRIDY[(i * x) + (x * 4) - 1, 2] == 10) || (GRIDY[(i * x) + (x * 4) - 1, 2] == 11)))
+            {
+                randomIndex2 = Random.Range(0, 2);
+                GRIDY[(i * x) + (x * 3) - 1, 2] = eightNine[randomIndex2];
+                GRIDY[(i * x) + (x * 3) - 1, 0] = i + 2;
+                GRIDY[(i * x) + (x * 3) - 1, 1] = y - 1;
+            }
+            else if (((GRIDY[(i * x) + (x * 2) - 1, 2] == 8 || GRIDY[(i * x) + (x * 2) - 1, 2] == 9 || GRIDY[(i * x) + (x * 2) - 1, 2] == 10 || GRIDY[(i * x) + (x * 2) - 1, 2] == 11)) && ((GRIDY[(i * x) + (x * 4) - 1, 2] == 0) || (GRIDY[(i * x) + (x * 4) - 1, 2] == 1) || (GRIDY[(i * x) + (x * 4) - 1, 2] == 8) || (GRIDY[(i * x) + (x * 4) - 1, 2] == 9)))
+            {
+                randomIndex2 = Random.Range(0, 2);
+                GRIDY[(i * x) + (x * 3) - 1, 2] = twoThree[randomIndex2];
+                GRIDY[(i * x) + (x * 3) - 1, 0] = i + 2;
+                GRIDY[(i * x) + (x * 3) - 1, 1] = y - 1;
+            }
+            else if (((GRIDY[(i * x) + (x * 2) - 1, 2] == 8 || GRIDY[(i * x) + (x * 2) - 1, 2] == 9 || GRIDY[(i * x) + (x * 2) - 1, 2] == 10 || GRIDY[(i * x) + (x * 2) - 1, 2] == 11)) && ((GRIDY[(i * x) + (x * 4) - 1, 2] == 2) || (GRIDY[(i * x) + (x * 4) - 1, 2] == 3) || (GRIDY[(i * x) + (x * 4) - 1, 2] == 10) || (GRIDY[(i * x) + (x * 4) - 1, 2] == 11)))
+            {
+                randomIndex2 = Random.Range(0, 2);
+                GRIDY[(i * x) + (x * 3) - 1, 2] = tenEleven[randomIndex2];
+                GRIDY[(i * x) + (x * 3) - 1, 0] = i + 2;
+                GRIDY[(i * x) + (x * 3) - 1, 1] = y - 1;
+            }
+        }
+
+        //True Right ----------------------------------------------
+        int numOfTrueRight = y - 4;
+        for (int i = 0; i <= numOfTrueRight; i++)
+        {
+            if (GRIDY[((gridSize - y + 3) + i), 2] == -1)
+            {
+                if (GRIDY[((gridSize - y + 1) + i), 2] == 0 || GRIDY[((gridSize - y + 1) + i), 2] == 1 || GRIDY[((gridSize - y + 1) + i), 2] == 2 || GRIDY[((gridSize - y + 1) + i), 2] == 3)
+                {
+                    randomIndex4 = Random.Range(0, 4);
+                    GRIDY[((gridSize - y + 2) + i), 2] = bottomPlusRight[randomIndex4];
+                    GRIDY[((gridSize - y + 2) + i), 0] = x - 1;
+                    GRIDY[((gridSize - y + 2) + i), 1] = i + 2;
+                }
+                else if (GRIDY[((gridSize - y + 1) + i), 2] == 4 || GRIDY[((gridSize - y + 1) + i), 2] == 5 || GRIDY[((gridSize - y + 1) + i), 2] == 6 || GRIDY[((gridSize - y + 1) + i), 2] == 7)
+                {
+                    randomIndex4 = Random.Range(0, 4);
+                    GRIDY[((gridSize - y + 2) + i), 2] = bottomRightAdjTop[randomIndex4];
+                    GRIDY[((gridSize - y + 2) + i), 0] = x - 1;
+                    GRIDY[((gridSize - y + 2) + i), 1] = i + 2;
+                }
+            }
+            else if (((GRIDY[((gridSize - y + 1) + i), 2] == 0 || GRIDY[((gridSize - y + 1) + i), 2] == 1 || GRIDY[((gridSize - y + 1) + i), 2] == 2 || GRIDY[((gridSize - y + 1) + i), 2] == 3)) && ((GRIDY[((gridSize - y + 3) + i), 2] == 0) || (GRIDY[((gridSize - y + 3) + i), 2] == 2) || (GRIDY[((gridSize - y + 3) + i), 2] == 4) || (GRIDY[((gridSize - y + 3) + i), 2] == 6)))
+            {
+                randomIndex2 = Random.Range(0, 2);
+                GRIDY[((gridSize - y + 2) + i), 2] = zeroTwoThree[randomIndex2];
+                GRIDY[((gridSize - y + 2) + i), 0] = x - 1;
+                GRIDY[((gridSize - y + 2) + i), 1] = i + 2;
+            }
+            else if (((GRIDY[((gridSize - y + 1) + i), 2] == 0 || GRIDY[((gridSize - y + 1) + i), 2] == 1 || GRIDY[((gridSize - y + 1) + i), 2] == 2 || GRIDY[((gridSize - y + 1) + i), 2] == 3)) && ((GRIDY[((gridSize - y + 3) + i), 2] == 1) || (GRIDY[((gridSize - y + 3) + i), 2] == 3) || (GRIDY[((gridSize - y + 3) + i), 2] == 5) || (GRIDY[((gridSize - y + 3) + i), 2] == 7)))
+            {
+                randomIndex2 = Random.Range(0, 2);
+                GRIDY[((gridSize - y + 2) + i), 2] = fourSix[randomIndex2];
+                GRIDY[((gridSize - y + 2) + i), 0] = x - 1;
+                GRIDY[((gridSize - y + 2) + i), 1] = i + 2;
+            }
+            else if (((GRIDY[((gridSize - y + 1) + i), 2] == 4 || GRIDY[((gridSize - y + 1) + i), 2] == 5 || GRIDY[((gridSize - y + 1) + i), 2] == 6 || GRIDY[((gridSize - y + 1) + i), 2] == 7)) && ((GRIDY[((gridSize - y + 3) + i), 2] == 0) || (GRIDY[((gridSize - y + 3) + i), 2] == 2) || (GRIDY[((gridSize - y + 3) + i), 2] == 4) || (GRIDY[((gridSize - y + 3) + i), 2] == 6)))
+            {
+                randomIndex2 = Random.Range(0, 2);
+                GRIDY[((gridSize - y + 2) + i), 2] = oneThree[randomIndex2];
+                GRIDY[((gridSize - y + 2) + i), 0] = x - 1;
+                GRIDY[((gridSize - y + 2) + i), 1] = i + 2;
+            }
+            else if (((GRIDY[((gridSize - y + 1) + i), 2] == 4 || GRIDY[((gridSize - y + 1) + i), 2] == 5 || GRIDY[((gridSize - y + 1) + i), 2] == 6 || GRIDY[((gridSize - y + 1) + i), 2] == 7)) && ((GRIDY[((gridSize - y + 3) + i), 2] == 1) || (GRIDY[((gridSize - y + 3) + i), 2] == 3) || (GRIDY[((gridSize - y + 3) + i), 2] == 5) || (GRIDY[((gridSize - y + 3) + i), 2] == 7)))
+            {
+                randomIndex2 = Random.Range(0, 2);
+                GRIDY[((gridSize - y + 2) + i), 2] = fiveSeven[randomIndex2];
+                GRIDY[((gridSize - y + 2) + i), 0] = x - 1;
+                GRIDY[((gridSize - y + 2) + i), 1] = i + 2;
+            }
+        }
+
+
+
+        ///Mid Fill --------------------------------------------------------
+        int horizontalFillNum = x - 2;
+        int endRow = horizontalFillNum - 1;
+        int simpleFillNum = y - 3;
+        for (int j = 0; j <= horizontalFillNum - 1; j++)
+        {
+            for (int i = 0; i <= simpleFillNum; i++)
+            {
+                if (j == endRow)
+                {
+                    if (GRIDY[(y + 1) + (i + 1) + (x * j), 2] == -1)
+                    {
+                        //Bottom, Top Wall
+                        if (GRIDY[(y + 1) + (x * j) + (i - 1), 2] == 0 || GRIDY[(y + 1) + (x * j) + (i - 1), 2] == 1 || GRIDY[(y + 1) + (x * j) + (i - 1), 2] == 2 || GRIDY[(y + 1) + (x * j) + (i - 1), 2] == 3 || GRIDY[(y + 1) + (x * j) + (i - 1), 2] == 8 || GRIDY[(y + 1) + (x * j) + (i - 1), 2] == 9 || GRIDY[(y + 1) + (x * j) + (i - 1), 2] == 10 || GRIDY[(y + 1) + (x * j) + (i - 1), 2] == 11)
+                        {
+                            //Left, Right Wall
+                            if (GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 0 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 1 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 2 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 3 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 4 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 5 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 6 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 7)
+                            {
+                                //Right, Left Wall
+                                if (GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 0 || GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 1 || GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 4 || GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 5)
+                                {
+                                    randomIndex2 = Random.Range(0, 2);
+                                    GRIDY[(y + 1) + i + (x * j), 2] = zeroOneTwo[randomIndex2];
+                                    GRIDY[(y + 1) + i + (x * j), 0] = 1 + j;
+                                    GRIDY[(y + 1) + i + (x * j), 1] = 1 + i;
+                                } //Right, Left Open
+                                else if (GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 2 || GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 3 || GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 6 || GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 7)
+                                {
+                                    randomIndex2 = Random.Range(0, 2);
+                                    GRIDY[(y + 1) + i + (x * j), 2] = eightTwelve[randomIndex2];
+                                    GRIDY[(y + 1) + i + (x * j), 0] = 1 + j;
+                                    GRIDY[(y + 1) + i + (x * j), 1] = 1 + i;
+                                }
+                            } //Left, Right Open
+                            else if (GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 8 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 9 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 10 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 11 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 12 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 13 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 14 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 15)
+                            {
+                                //Right, Left Wall
+                                if (GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 0 || GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 1 || GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 4 || GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 5)
+                                {
+                                    randomIndex2 = Random.Range(0, 2);
+                                    GRIDY[(y + 1) + i + (x * j), 2] = twoSix[randomIndex2];
+                                    GRIDY[(y + 1) + i + (x * j), 0] = 1 + j;
+                                    GRIDY[(y + 1) + i + (x * j), 1] = 1 + i;
+                                } //Right, Left Open
+                                else if (GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 2 || GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 3 || GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 6 || GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 7)
+                                {
+                                    randomIndex2 = Random.Range(0, 2);
+                                    GRIDY[(y + 1) + i + (x * j), 2] = tenFourteen[randomIndex2];
+                                    GRIDY[(y + 1) + i + (x * j), 0] = 1 + j;
+                                    GRIDY[(y + 1) + i + (x * j), 1] = 1 + i;
+                                }
+                            }
+                        }//Bottom, Top Open
+                        else if (GRIDY[(y + 1) + (x * j) + (i - 1), 2] == 4 || GRIDY[(y + 1) + (x * j) + (i - 1), 2] == 5 || GRIDY[(y + 1) + (x * j) + (i - 1), 2] == 6 || GRIDY[(y + 1) + (x * j) + (i - 1), 2] == 7 || GRIDY[(y + 1) + (x * j) + (i - 1), 2] == 12 || GRIDY[(y + 1) + (x * j) + (i - 1), 2] == 13 || GRIDY[(y + 1) + (x * j) + (i - 1), 2] == 14 || GRIDY[(y + 1) + (x * j) + (i - 1), 2] == 15)
+                        {
+                            //Left, Right Wall
+                            if (GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 0 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 1 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 2 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 3 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 4 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 5 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 6 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 7)
+                            {
+                                //Right, Left Wall
+                                if (GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 0 || GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 1 || GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 4 || GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 5)
+                                {
+                                    randomIndex2 = Random.Range(0, 2);
+                                    GRIDY[(y + 1) + i + (x * j), 2] = oneFive[randomIndex2];
+                                    GRIDY[(y + 1) + i + (x * j), 0] = 1 + j;
+                                    GRIDY[(y + 1) + i + (x * j), 1] = 1 + i;
+                                } //Right, Left Open
+                                else if (GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 2 || GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 3 || GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 6 || GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 7)
+                                {
+                                    randomIndex2 = Random.Range(0, 2);
+                                    GRIDY[(y + 1) + i + (x * j), 2] = nineThirteen[randomIndex2];
+                                    GRIDY[(y + 1) + i + (x * j), 0] = 1 + j;
+                                    GRIDY[(y + 1) + i + (x * j), 1] = 1 + i;
+                                }
+                            } //Left, Right Open
+                            else if (GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 8 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 9 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 10 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 11 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 12 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 13 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 14 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 15)
+                            {
+                                //Right, Left Wall
+                                if (GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 0 || GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 1 || GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 4 || GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 5)
+                                {
+                                    randomIndex2 = Random.Range(0, 2);
+                                    GRIDY[(y + 1) + i + (x * j), 2] = threeSeven[randomIndex2];
+                                    GRIDY[(y + 1) + i + (x * j), 0] = 1 + j;
+                                    GRIDY[(y + 1) + i + (x * j), 1] = 1 + i;
+                                } //Right, Left Open
+                                else if (GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 2 || GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 3 || GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 6 || GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 7)
+                                {
+                                    randomIndex2 = Random.Range(0, 2);
+                                    GRIDY[(y + 1) + i + (x * j), 2] = elevenFifteen[randomIndex2];
+                                    GRIDY[(y + 1) + i + (x * j), 0] = 1 + j;
+                                    GRIDY[(y + 1) + i + (x * j), 1] = 1 + i;
+                                }
+                            }
+                        }
+                        //Top, Bottom Walled            
+                    }
+                    else if (GRIDY[(y + 1) + (i + 1) + (x * j), 2] == 0 || GRIDY[(y + 1) + (i + 1) + (x * j), 2] == 2 || GRIDY[(y + 1) + (i + 1) + (x * j), 2] == 4 || GRIDY[(y + 1) + (i + 1) + (x * j), 2] == 6 || GRIDY[(y + 1) + (i + 1) + (x * j), 2] == 8 || GRIDY[(y + 1) + (i + 1) + (x * j), 2] == 10 || GRIDY[(y + 1) + (i + 1) + (x * j), 2] == 12 || GRIDY[(y + 1) + (i + 1) + (x * j), 2] == 14)
+                    {
+                        //Bottom, Top Wall
+                        if (GRIDY[(y + 1) + (x * j) + (i - 1), 2] == 0 || GRIDY[(y + 1) + (x * j) + (i - 1), 2] == 1 || GRIDY[(y + 1) + (x * j) + (i - 1), 2] == 2 || GRIDY[(y + 1) + (x * j) + (i - 1), 2] == 3 || GRIDY[(y + 1) + (x * j) + (i - 1), 2] == 8 || GRIDY[(y + 1) + (x * j) + (i - 1), 2] == 9 || GRIDY[(y + 1) + (x * j) + (i - 1), 2] == 10 || GRIDY[(y + 1) + (x * j) + (i - 1), 2] == 11)
+                        {
+                            //Left, Right Wall
+                            if (GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 0 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 1 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 2 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 3 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 4 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 5 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 6 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 7)
+                            {
+                                //Right, Left Wall
+                                if (GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 0 || GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 1 || GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 4 || GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 5)
+                                {
+                                    GRIDY[(y + 1) + i + (x * j), 2] = 0;
+                                    GRIDY[(y + 1) + i + (x * j), 0] = 1 + j;
+                                    GRIDY[(y + 1) + i + (x * j), 1] = 1 + i;
+                                } //Right, Left Open
+                                else if (GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 2 || GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 3 || GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 6 || GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 7)
+                                {
+                                    GRIDY[(y + 1) + i + (x * j), 2] = 8;
+                                    GRIDY[(y + 1) + i + (x * j), 0] = 1 + j;
+                                    GRIDY[(y + 1) + i + (x * j), 1] = 1 + i;
+                                }
+                            } //Left, Right Open
+                            else if (GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 8 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 9 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 10 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 11 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 12 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 13 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 14 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 15)
+                            {
+                                //Right, Left Wall
+                                if (GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 0 || GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 1 || GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 4 || GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 5)
+                                {
+                                    GRIDY[(y + 1) + i + (x * j), 2] = 2;
+                                    GRIDY[(y + 1) + i + (x * j), 0] = 1 + j;
+                                    GRIDY[(y + 1) + i + (x * j), 1] = 1 + i;
+                                } //Right, Left Open
+                                else if (GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 2 || GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 3 || GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 6 || GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 7)
+                                {
+                                    GRIDY[(y + 1) + i + (x * j), 2] = 10;
+                                    GRIDY[(y + 1) + i + (x * j), 0] = 1 + j;
+                                    GRIDY[(y + 1) + i + (x * j), 1] = 1 + i;
+                                }
+                            }
+                        }//Bottom, Top Open
+                        else if (GRIDY[(y + 1) + (x * j) + (i - 1), 2] == 4 || GRIDY[(y + 1) + (x * j) + (i - 1), 2] == 5 || GRIDY[(y + 1) + (x * j) + (i - 1), 2] == 6 || GRIDY[(y + 1) + (x * j) + (i - 1), 2] == 7 || GRIDY[(y + 1) + (x * j) + (i - 1), 2] == 12 || GRIDY[(y + 1) + (x * j) + (i - 1), 2] == 13 || GRIDY[(y + 1) + (x * j) + (i - 1), 2] == 14 || GRIDY[(y + 1) + (x * j) + (i - 1), 2] == 15)
+                        {
+                            //Left, Right Wall
+                            if (GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 0 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 1 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 2 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 3 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 4 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 5 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 6 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 7)
+                            {
+                                //Right, Left Wall
+                                if (GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 0 || GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 1 || GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 4 || GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 5)
+                                {
+                                    GRIDY[(y + 1) + i + (x * j), 2] = 1;
+                                    GRIDY[(y + 1) + i + (x * j), 0] = 1 + j;
+                                    GRIDY[(y + 1) + i + (x * j), 1] = 1 + i;
+                                } //Right, Left Open
+                                else if (GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 2 || GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 3 || GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 6 || GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 7)
+                                {
+                                    GRIDY[(y + 1) + i + (x * j), 2] = 9;
+                                    GRIDY[(y + 1) + i + (x * j), 0] = 1 + j;
+                                    GRIDY[(y + 1) + i + (x * j), 1] = 1 + i;
+                                }
+                            } //Left, Right Open
+                            else if (GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 8 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 9 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 10 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 11 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 12 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 13 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 14 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 15)
+                            {
+                                //Right, Left Wall
+                                if (GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 0 || GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 1 || GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 4 || GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 5)
+                                {
+                                    GRIDY[(y + 1) + i + (x * j), 2] = 3;
+                                    GRIDY[(y + 1) + i + (x * j), 0] = 1 + j;
+                                    GRIDY[(y + 1) + i + (x * j), 1] = 1 + i;
+                                } //Right, Left Open
+                                else if (GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 2 || GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 3 || GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 6 || GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 7)
+                                {
+                                    GRIDY[(y + 1) + i + (x * j), 2] = 11;
+                                    GRIDY[(y + 1) + i + (x * j), 0] = 1 + j;
+                                    GRIDY[(y + 1) + i + (x * j), 1] = 1 + i;
+                                }
+                            }
+                        }
+                    } //Top, Bottom Open
+                    else if (GRIDY[(y + 1) + (i + 1) + (x * j), 2] == 1 || GRIDY[(y + 1) + (i + 1) + (x * j), 2] == 3 || GRIDY[(y + 1) + (i + 1) + (x * j), 2] == 5 || GRIDY[(y + 1) + (i + 1) + (x * j), 2] == 7 || GRIDY[(y + 1) + (i + 1) + (x * j), 2] == 9 || GRIDY[(y + 1) + (i + 1) + (x * j), 2] == 11 || GRIDY[(y + 1) + (i + 1) + (x * j), 2] == 13 || GRIDY[(y + 1) + (i + 1) + (x * j), 2] == 15)
+                    {
+                        //Bottom, Top Wall
+                        if (GRIDY[(y + 1) + (x * j) + (i - 1), 2] == 0 || GRIDY[(y + 1) + (x * j) + (i - 1), 2] == 1 || GRIDY[(y + 1) + (x * j) + (i - 1), 2] == 2 || GRIDY[(y + 1) + (x * j) + (i - 1), 2] == 3 || GRIDY[(y + 1) + (x * j) + (i - 1), 2] == 8 || GRIDY[(y + 1) + (x * j) + (i - 1), 2] == 9 || GRIDY[(y + 1) + (x * j) + (i - 1), 2] == 10 || GRIDY[(y + 1) + (x * j) + (i - 1), 2] == 11)
+                        {
+                            //Left, Right Wall
+                            if (GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 0 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 1 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 2 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 3 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 4 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 5 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 6 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 7)
+                            {
+                                //Right, Left Wall
+                                if (GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 0 || GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 1 || GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 4 || GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 5)
+                                {
+                                    GRIDY[(y + 1) + i + (x * j), 2] = 4;
+                                    GRIDY[(y + 1) + i + (x * j), 0] = 1 + j;
+                                    GRIDY[(y + 1) + i + (x * j), 1] = 1 + i;
+                                } //Right, Left Open
+                                else if (GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 2 || GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 3 || GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 6 || GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 7)
+                                {
+                                    GRIDY[(y + 1) + i + (x * j), 2] = 12;
+                                    GRIDY[(y + 1) + i + (x * j), 0] = 1 + j;
+                                    GRIDY[(y + 1) + i + (x * j), 1] = 1 + i;
+                                }
+                            } //Left, Right Open
+                            else if (GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 8 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 9 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 10 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 11 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 12 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 13 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 14 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 15)
+                            {
+                                //Right, Left Wall
+                                if (GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 0 || GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 1 || GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 4 || GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 5)
+                                {
+                                    GRIDY[(y + 1) + i + (x * j), 2] = 6;
+                                    GRIDY[(y + 1) + i + (x * j), 0] = 1 + j;
+                                    GRIDY[(y + 1) + i + (x * j), 1] = 1 + i;
+                                } //Right, Left Open
+                                else if (GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 2 || GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 3 || GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 6 || GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 7)
+                                {
+                                    GRIDY[(y + 1) + i + (x * j), 2] = 14;
+                                    GRIDY[(y + 1) + i + (x * j), 0] = 1 + j;
+                                    GRIDY[(y + 1) + i + (x * j), 1] = 1 + i;
+                                }
+                            }
+                        }//Bottom, Top Open
+                        else if (GRIDY[(y + 1) + (x * j) + (i - 1), 2] == 4 || GRIDY[(y + 1) + (x * j) + (i - 1), 2] == 5 || GRIDY[(y + 1) + (x * j) + (i - 1), 2] == 6 || GRIDY[(y + 1) + (x * j) + (i - 1), 2] == 7 || GRIDY[(y + 1) + (x * j) + (i - 1), 2] == 12 || GRIDY[(y + 1) + (x * j) + (i - 1), 2] == 13 || GRIDY[(y + 1) + (x * j) + (i - 1), 2] == 14 || GRIDY[(y + 1) + (x * j) + (i - 1), 2] == 15)
+                        {
+                            //Left, Right Wall
+                            if (GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 0 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 1 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 2 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 3 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 4 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 5 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 6 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 7)
+                            {
+                                //Right, Left Wall
+                                if (GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 0 || GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 1 || GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 4 || GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 5)
+                                {
+                                    GRIDY[(y + 1) + i + (x * j), 2] = 5;
+                                    GRIDY[(y + 1) + i + (x * j), 0] = 1 + j;
+                                    GRIDY[(y + 1) + i + (x * j), 1] = 1 + i;
+                                } //Right, Left Open
+                                else if (GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 2 || GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 3 || GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 6 || GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 7)
+                                {
+                                    GRIDY[(y + 1) + i + (x * j), 2] = 13;
+                                    GRIDY[(y + 1) + i + (x * j), 0] = 1 + j;
+                                    GRIDY[(y + 1) + i + (x * j), 1] = 1 + i;
+                                }
+                            } //Left, Right Open
+                            else if (GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 8 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 9 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 10 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 11 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 12 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 13 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 14 || GRIDY[(y + 1) + (x * (j - 1)) + i, 2] == 15)
+                            {
+                                //Right, Left Wall
+                                if (GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 0 || GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 1 || GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 4 || GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 5)
+                                {
+                                    GRIDY[(y + 1) + i + (x * j), 2] = 7;
+                                    GRIDY[(y + 1) + i + (x * j), 0] = 1 + j;
+                                    GRIDY[(y + 1) + i + (x * j), 1] = 1 + i;
+                                } //Right, Left Open
+                                else if (GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 2 || GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 3 || GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 6 || GRIDY[(y + 1) + (x * (j + 1)) + i, 2] == 7)
+                                {
+                                    GRIDY[(y + 1) + i + (x * j), 2] = 15;
+                                    GRIDY[(y + 1) + i + (x * j), 0] = 1 + j;
+                                    GRIDY[(y + 1) + i + (x * j), 1] = 1 + i;
+                                }
+                            }
+                        }
+                    }
+
+                }
+
+
+                //Top & Left Walled
+                else if ((GRIDY[((y + i) + (x * j)), 2] == 0 || GRIDY[((y + i) + (x * j)), 2] == 1 || GRIDY[((y + i) + (x * j)), 2] == 2 || GRIDY[((y + i) + (x * j)), 2] == 3 || GRIDY[((y + i) + (x * j)), 2] == 8 || GRIDY[((y + i) + (x * j)), 2] == 9 || GRIDY[((y + i) + (x * j)), 2] == 10 || GRIDY[((y + i) + (x * j)), 2] == 11) && ((GRIDY[((i + 1) + (x * j)), 2] == 0) || (GRIDY[((i + 1) + (x * j)), 2] == 1) || (GRIDY[((i + 1) + (x * j)), 2] == 2) || (GRIDY[((i + 1) + (x * j)), 2] == 3) || (GRIDY[((i + 1) + (x * j)), 2] == 4) || (GRIDY[((i + 1) + (x * j)), 2] == 5) || (GRIDY[((i + 1) + (x * j)), 2] == 6) || (GRIDY[((i + 1) + (x * j)), 2] == 7)))
+                {
+                    if (i == simpleFillNum && (GRIDY[(y + 2) + i + (x * j), 2] == 0 || GRIDY[(y + 2) + i + (x * j), 2] == 2 || GRIDY[(y + 2) + i + (x * j), 2] == 8 || GRIDY[(y + 2) + i + (x * j), 2] == 10))
+                    {
+                        randomIndex2 = Random.Range(0, 2);
+                        GRIDY[(y + 1) + i + (x * j), 2] = zeroOneThree[randomIndex2];
+                        GRIDY[(y + 1) + i + (x * j), 0] = 1 + j;
+                        GRIDY[(y + 1) + i + (x * j), 1] = 1 + i;
+                    }
+                    else if (i == simpleFillNum && (GRIDY[(y + 2) + i + (x * j), 2] == 1 || GRIDY[(y + 2) + i + (x * j), 2] == 3 || GRIDY[(y + 2) + i + (x * j), 2] == 9 || GRIDY[(y + 2) + i + (x * j), 2] == 11))
+                    {
+                        randomIndex2 = Random.Range(0, 2);
+                        GRIDY[(y + 1) + i + (x * j), 2] = fourTwelve[randomIndex2];
+                        GRIDY[(y + 1) + i + (x * j), 0] = 1 + j;
+                        GRIDY[(y + 1) + i + (x * j), 1] = 1 + i;
+                    }
+                    else
+                    {
+                        randomIndex4 = Random.Range(0, 4);
+                        GRIDY[(y + 1) + i + (x * j), 2] = bottomPlusLeft[randomIndex4];
+                        GRIDY[(y + 1) + i + (x * j), 0] = 1 + j;
+                        GRIDY[(y + 1) + i + (x * j), 1] = 1 + i;
+                    }
+                }
+                else if ((GRIDY[(y + i) + (x * j), 2] == 0 || GRIDY[(y + i) + (x * j), 2] == 1 || GRIDY[(y + i) + (x * j), 2] == 2 || GRIDY[(y + i) + (x * j), 2] == 3 || GRIDY[(y + i) + (x * j), 2] == 8 || GRIDY[(y + i) + (x * j), 2] == 9 || GRIDY[(y + i) + (x * j), 2] == 10 || GRIDY[(y + i) + (x * j), 2] == 11) && ((GRIDY[(i + 1) + (x * j), 2] == 8) || (GRIDY[(i + 1) + (x * j), 2] == 9) || (GRIDY[(i + 1) + (x * j), 2] == 10) || (GRIDY[(i + 1) + (x * j), 2] == 11) || (GRIDY[(i + 1) + (x * j), 2] == 12) || (GRIDY[(i + 1) + (x * j), 2] == 13) || (GRIDY[(i + 1) + (x * j), 2] == 14) || (GRIDY[(i + 1) + (x * j), 2] == 15)))
+                {
+                    if (i == simpleFillNum && (GRIDY[(y + 2) + i + (x * j), 2] == 0 || GRIDY[(y + 2) + i + (x * j), 2] == 2 || GRIDY[(y + 2) + i + (x * j), 2] == 8 || GRIDY[(y + 2) + i + (x * j), 2] == 10))
+                    {
+                        randomIndex2 = Random.Range(0, 2);
+                        GRIDY[(y + 1) + i + (x * j), 2] = twoTen[randomIndex2];
+                        GRIDY[(y + 1) + i + (x * j), 0] = 1 + j;
+                        GRIDY[(y + 1) + i + (x * j), 1] = 1 + i;
+                    }
+                    else if (i == simpleFillNum && (GRIDY[(y + 2) + i + (x * j), 2] == 1 || GRIDY[(y + 2) + i + (x * j), 2] == 3 || GRIDY[(y + 2) + i + (x * j), 2] == 9 || GRIDY[(y + 2) + i + (x * j), 2] == 11))
+                    {
+                        randomIndex2 = Random.Range(0, 2);
+                        GRIDY[(y + 1) + i + (x * j), 2] = sixFourteen[randomIndex2];
+                        GRIDY[(y + 1) + i + (x * j), 0] = 1 + j;
+                        GRIDY[(y + 1) + i + (x * j), 1] = 1 + i;
+                    }
+                    else
+                    {
+                        randomIndex4 = Random.Range(0, 4);
+                        GRIDY[(y + 1) + i + (x * j), 2] = btmLeftAdjRight[randomIndex4];
+                        GRIDY[(y + 1) + i + (x * j), 0] = 1 + j;
+                        GRIDY[(y + 1) + i + (x * j), 1] = 1 + i;
+                    }
+                }
+                else if ((GRIDY[(y + i) + (x * j), 2] == 4 || GRIDY[(y + i) + (x * j), 2] == 5 || GRIDY[(y + i) + (x * j), 2] == 6 || GRIDY[(y + i) + (x * j), 2] == 7 || GRIDY[(y + i) + (x * j), 2] == 12 || GRIDY[(y + i) + (x * j), 2] == 13 || GRIDY[(y + i) + (x * j), 2] == 14 || GRIDY[(y + i) + (x * j), 2] == 15) && ((GRIDY[(i + 1) + (x * j), 2] == 0) || (GRIDY[(i + 1) + (x * j), 2] == 1) || (GRIDY[(i + 1) + (x * j), 2] == 2) || (GRIDY[(i + 1) + (x * j), 2] == 3) || (GRIDY[(i + 1) + (x * j), 2] == 4) || (GRIDY[(i + 1) + (x * j), 2] == 5) || (GRIDY[(i + 1) + (x * j), 2] == 6) || (GRIDY[(i + 1) + (x * j), 2] == 7)))
+                {
+                    if (i == simpleFillNum && (GRIDY[(y + 2) + i + (x * j), 2] == 0 || GRIDY[(y + 2) + i + (x * j), 2] == 2 || GRIDY[(y + 2) + i + (x * j), 2] == 8 || GRIDY[(y + 2) + i + (x * j), 2] == 10))
+                    {
+                        randomIndex2 = Random.Range(0, 2);
+                        GRIDY[(y + 1) + i + (x * j), 2] = oneNine[randomIndex2];
+                        GRIDY[(y + 1) + i + (x * j), 0] = 1 + j;
+                        GRIDY[(y + 1) + i + (x * j), 1] = 1 + i;
+                    }
+                    else if (i == simpleFillNum && (GRIDY[(y + 2) + i + (x * j), 2] == 1 || GRIDY[(y + 2) + i + (x * j), 2] == 3 || GRIDY[(y + 2) + i + (x * j), 2] == 9 || GRIDY[(y + 2) + i + (x * j), 2] == 11))
+                    {
+                        randomIndex2 = Random.Range(0, 2);
+                        GRIDY[(y + 1) + i + (x * j), 2] = fiveThirteen[randomIndex2];
+                        GRIDY[(y + 1) + i + (x * j), 0] = 1 + j;
+                        GRIDY[(y + 1) + i + (x * j), 1] = 1 + i;
+                    }
+                    else
+                    {
+                        randomIndex4 = Random.Range(0, 4);
+                        GRIDY[(y + 1) + i + (x * j), 2] = btmLeftAdjTop[randomIndex4];
+                        GRIDY[(y + 1) + i + (x * j), 0] = 1 + j;
+                        GRIDY[(y + 1) + i + (x * j), 1] = 1 + i;
+                    }
+                }
+                else if ((GRIDY[(y + i) + (x * j), 2] == 4 || GRIDY[(y + i) + (x * j), 2] == 5 || GRIDY[(y + i) + (x * j), 2] == 6 || GRIDY[(y + i) + (x * j), 2] == 7 || GRIDY[(y + i) + (x * j), 2] == 12 || GRIDY[(y + i) + (x * j), 2] == 13 || GRIDY[(y + i) + (x * j), 2] == 14 || GRIDY[(y + i) + (x * j), 2] == 15) && ((GRIDY[(i + 1) + (x * j), 2] == 8) || (GRIDY[(i + 1) + (x * j), 2] == 9) || (GRIDY[(i + 1) + (x * j), 2] == 10) || (GRIDY[(i + 1) + (x * j), 2] == 11) || (GRIDY[(i + 1) + (x * j), 2] == 12) || (GRIDY[(i + 1) + (x * j), 2] == 13) || (GRIDY[(i + 1) + (x * j), 2] == 14) || (GRIDY[(i + 1) + (x * j), 2] == 15)))
+                {
+                    if (i == simpleFillNum && (GRIDY[(y + 2) + i + (x * j), 2] == 0 || GRIDY[(y + 2) + i + (x * j), 2] == 2 || GRIDY[(y + 2) + i + (x * j), 2] == 8 || GRIDY[(y + 2) + i + (x * j), 2] == 10))
+                    {
+                        randomIndex2 = Random.Range(0, 2);
+                        GRIDY[(y + 1) + i + (x * j), 2] = threeEleven[randomIndex2];
+                        GRIDY[(y + 1) + i + (x * j), 0] = 1 + j;
+                        GRIDY[(y + 1) + i + (x * j), 1] = 1 + i;
+                    }
+                    else if (i == simpleFillNum && (GRIDY[(y + 2) + i + (x * j), 2] == 1 || GRIDY[(y + 2) + i + (x * j), 2] == 3 || GRIDY[(y + 2) + i + (x * j), 2] == 9 || GRIDY[(y + 2) + i + (x * j), 2] == 11))
+                    {
+                        randomIndex2 = Random.Range(0, 2);
+                        GRIDY[(y + 1) + i + (x * j), 2] = sevenFifteen[randomIndex2];
+                        GRIDY[(y + 1) + i + (x * j), 0] = 1 + j;
+                        GRIDY[(y + 1) + i + (x * j), 1] = 1 + i;
+                    }
+                    else
+                    {
+                        randomIndex4 = Random.Range(0, 4);
+                        GRIDY[(y + 1) + i + (x * j), 2] = midFillOpen[randomIndex4];
+                        GRIDY[(y + 1) + i + (x * j), 0] = 1 + j;
+                        GRIDY[(y + 1) + i + (x * j), 1] = 1 + i;
+                    }
+                }
+            }
+        }
+
+
+        //========================================================================================================================================================
+        //HARD Force a Specific tileset, Seed Generator
+        /*
+        GRIDY[0, 2] = 8;
+        GRIDY[1, 2] = 8;
+        GRIDY[2, 2] = 8;
+        GRIDY[3, 2] = 8;
+        GRIDY[4, 2] = 12;
+        GRIDY[5, 2] = 1;
+        GRIDY[6, 2] = 2;
+        GRIDY[7, 2] = 2;
+        GRIDY[8, 2] = 14;
+        GRIDY[9, 2] = 15;
+        GRIDY[10, 2] = 15;
+        GRIDY[11, 2] = 1;
+        GRIDY[12, 2] = 0;
+        GRIDY[13, 2] = 4;
+        GRIDY[14, 2] = 3;
+        GRIDY[15, 2] = 2;
+        GRIDY[16, 2] = 2;
+        GRIDY[17, 2] = 0;
+        GRIDY[18, 2] = 8;
+        GRIDY[19, 2] = 4;
+        GRIDY[20, 2] = 9;
+        GRIDY[21, 2] = 8;
+        GRIDY[22, 2] = 8;
+        GRIDY[23, 2] = 8;
+        GRIDY[24, 2] = 2;
+        GRIDY[25, 2] = 12;
+        GRIDY[26, 2] = 15;
+        GRIDY[27, 2] = 7;
+        GRIDY[28, 2] = 11;
+        GRIDY[29, 2] = 10;
+        GRIDY[30, 2] = 0;
+        GRIDY[31, 2] = 2;
+        GRIDY[32, 2] = 2;
+        GRIDY[33, 2] = 0;
+        GRIDY[34, 2] = 6;
+        GRIDY[35, 2] = 3;
+        */
+        
+        //========================================================================================================================================================
+
+        for (int i = 0; i <= gridSize - 1; i++)
+        {
+            Instantiate(fullSet[GRIDY[i, 2]], new Vector2((tilesize * ScaleFactor * GRIDY[i, 0]) + TileScaleOffset, (tilesize * ScaleFactor * GRIDY[i, 1]) + TileScaleOffset), Quaternion.identity);
+            //Debug.Log("GRID slot " + i + " = {" + GRIDY[i, 0] + ", " + GRIDY[i, 1] + ", " + GRIDY[i, 2] + "}");
+            player.transform.localPosition = new Vector2(6, 6);
+
+        }
+        return GRIDY;
+    }
+
+    void Generate_Areas(int[,] GRID, int GS, int Horz, int Vert)
+    {
+        int[,] TileInfo = { { 0, 0, 0, 0 }, { 0, 0, 0, 1 }, { 0, 0, 1, 0 }, { 0, 0, 1, 1 }, { 0, 1, 0, 0 }, { 0, 1, 0, 1 }, { 0, 1, 1, 0 }, { 0, 1, 1, 1 },
+                            { 1, 0, 0, 0 }, { 1, 0, 0, 1 }, { 1, 0, 1, 0 }, { 1, 0, 1, 1 }, { 1, 1, 0, 0 }, { 1, 1, 0, 1 }, { 1, 1, 1, 0 }, { 1, 1, 1, 1 } };
+        int[,,] AllAreas = new int[GS, GS, 3];
+        int[,,] GRID_CombinedAreas = new int[2, GS, 3];
+        for (int i = 0; i < GS; i++)
+        {
+            for (int k = 0; k < 3; k++)
+            {
+                GRID_CombinedAreas[0, i, k] = GRID[i, k];
+            }
+        }
+
+        int jtemp = 0;
+        int[] temp = new int[GS];
+        for (int m = 0; m < GS; m++)
+        {
+            Array.Clear(temp, 0, temp.Length);
+            
+            for (int n = m; n < GS; n++)
+            {
+                if (GRID_CombinedAreas[1, n, 0] == 0 && GRID_CombinedAreas[1, n, 1] == 0 && GRID_CombinedAreas[1,n, 2] == 0)
+                {
+                    jtemp = n;
+                    temp[0] = jtemp;
+                    break;
+                }
+            }
+            
+            Array.Copy(GRID_CombinedAreas, ((3 * GS * 0) + (3 * jtemp)), AllAreas, ((3 * GS * m) + (3 * jtemp)), 3);
+            Array.Copy(GRID_CombinedAreas, ((3 * GS * 0) + (3 * jtemp)), GRID_CombinedAreas, ((3 * GS * 1) + (3 * jtemp)), 3);
+            
+            for (int i = 0; i < GS; i++)
+            {
+                jtemp = temp[i];
+                if (AllAreas[m, jtemp, 2] != 0)
+                {
+                    if (TileInfo[GRID_CombinedAreas[0, jtemp, 2], 0] == 1)//right
+                    {
+                        Array.Copy(GRID_CombinedAreas, ((3 * GS * 0) + (3 * Horz + 3 * jtemp)), AllAreas, ((3 * GS * m) + (3 * Horz + 3 * jtemp)), 3);
+                        Array.Copy(GRID_CombinedAreas, ((3 * GS * 0) + (3 * Horz + 3 * jtemp)), GRID_CombinedAreas, ((3 * GS * 1) + (3 * Horz + 3 * jtemp)), 3);
+                        for (int k = 1; k < temp.Length; k++)
+                        {
+                            if (temp[k] == Horz + jtemp)
+                            {
+                                break;
+                            }
+                            if (temp[k] == 0)
+                            {
+                                temp[k] = Horz + jtemp;
+                                break;
+                            }
+                        }
+                    }
+                    if (TileInfo[GRID_CombinedAreas[0, jtemp, 2], 1] == 1)//up
+                    {
+                        Array.Copy(GRID_CombinedAreas, ((3 * GS * 0) + (3 * 1 + 3 * jtemp)), AllAreas, ((3 * GS * m) + (3 * 1 + 3 * jtemp)), 3);
+                        Array.Copy(GRID_CombinedAreas, ((3 * GS * 0) + (3 * 1 + 3 * jtemp)), GRID_CombinedAreas, ((3 * GS * 1) + (3 * 1 + 3 * jtemp)), 3);
+                        for (int k = 1; k < temp.Length; k++)
+                        {
+                            if (temp[k] == 1 + jtemp)
+                            {
+                                break;
+                            }
+                            if (temp[k] == 0)
+                            {
+                                temp[k] = 1 + jtemp;
+                                break;
+                            }
+                        }
+                    }
+                    if (TileInfo[GRID_CombinedAreas[0, jtemp, 2], 2] == 1)//left
+                    {
+                        Array.Copy(GRID_CombinedAreas, ((3 * GS * 0) + (3 * jtemp - 3 * Horz)), AllAreas, ((3 * GS * m) + (3 * jtemp - 3 * Horz)), 3);
+                        Array.Copy(GRID_CombinedAreas, ((3 * GS * 0) + (3 * jtemp - 3 * Horz)), GRID_CombinedAreas, ((3 * GS * 1) + (3 * jtemp - 3 * Horz)), 3);
+                        for (int k = 1; k < temp.Length; k++)
+                        {
+                            if (temp[k] == jtemp - Horz)
+                            {
+                                break;
+                            }
+                            if (temp[k] == 0)
+                            {
+                                temp[k] = jtemp - Horz;
+                                break;
+                            }
+                        }
+                    }
+                    if (TileInfo[GRID_CombinedAreas[0, jtemp, 2], 3] == 1)//down
+                    {
+                        Array.Copy(GRID_CombinedAreas, ((3 * GS * 0) + (3 * jtemp - 3 * 1)), AllAreas, ((3 * GS * m) + (3 * jtemp - 3 * 1)), 3);
+                        Array.Copy(GRID_CombinedAreas, ((3 * GS * 0) + (3 * jtemp - 3 * 1)), GRID_CombinedAreas, ((3 * GS * 1) + (3 * jtemp - 3 * 1)), 3);
+                        for (int k = 1; k < temp.Length; k++)
+                        {
+                            if (temp[k] == jtemp - 1)
+                            {
+                                break;
+                            }
+                            if (temp[k] == 0)
+                            {
+                                temp[k] = jtemp - 1;
+                                break;
+                            }
+                        }
+                    }
+                }
+                if (temp[i]+1 == 0)
+                {
+                    //Debug.Log("BREAK OUT!!!!!!!!!!BREAK OUT!!!!!!!!!!BREAK OUT!!!!!!!!!!BREAK OUT!!!!!!!!!!BREAK OUT!!!!!!!!!!___Instance m = "+m+ "  and i = "+i );
+                    break;
+                }
+            }
+            //to end the process when all the rooms have been acounted for
+            int count = 0;
+            /*if (m == 6 || m == 7 || m == 8)
+            {
+                Debug.Log("at m = "+m+ " _______ count = "+count+"   ________________________________________________________");
+            }*/
+            for (int u = 1; u < GS; u++)
+            {
+                if (GRID_CombinedAreas[1, u, 0] == 0 && GRID_CombinedAreas[1, u, 1] == 0 && GRID_CombinedAreas[1, u, 2] == 0)
+                {
+                    count++;
+                }
+            }
+            /*if (m == 6 || m == 7 || m == 8)
+            {
+                Debug.Log("at m = " + m + " _______ count = " + count + "   ________________________________________________________");
+            }*/
+            if (count == 0)
+            {
+                break;
+            }
+
+        }
+
+       
+        //Debugging logs
+        /*
+        for (int i = 0; i < GS; i++)
+        {
+            Debug.Log("GRID: {" + GRID_CombinedAreas[0,i,0]+", "+ GRID_CombinedAreas[0, i, 1] +", " + GRID_CombinedAreas[0, i, 2] + "}\tCombined Areas: {" + GRID_CombinedAreas[1,i,0]+", "+ GRID_CombinedAreas[1, i, 1] +", " + GRID_CombinedAreas[1, i, 2] 
+                + "}\nArea1: {" + AllAreas[0, i, 0] + ", " + AllAreas[0, i, 1] + ", " + AllAreas[0, i, 2] + "}\tArea2: {" + AllAreas[1, i, 0] + ", " + AllAreas[1, i, 1] + ", " + AllAreas[1, i, 2] 
+                + "}\tArea3: {" + AllAreas[2, i, 0] + ", " + AllAreas[2, i, 1] + ", " + AllAreas[2, i, 2] + "}\tArea4: {" + AllAreas[3, i, 0] + ", " + AllAreas[3, i, 1] + ", " + AllAreas[3, i, 2]
+                + "}\tArea5: {" + AllAreas[4, i, 0] + ", " + AllAreas[4, i, 1] + ", " + AllAreas[4, i, 2] + "}\tArea6: {" + AllAreas[5, i, 0] + ", " + AllAreas[5, i, 1] + ", " + AllAreas[5, i, 2]
+                + "}\tArea7: {" + AllAreas[6, i, 0] + ", " + AllAreas[6, i, 1] + ", " + AllAreas[6, i, 2] + "}\tArea8: {" + AllAreas[7, i, 0] + ", " + AllAreas[7, i, 1] + ", " + AllAreas[7, i, 2]
+                + "}\tArea9: {" + AllAreas[8, i, 0] + ", " + AllAreas[8, i, 1] + ", " + AllAreas[8, i, 2] + "}\tArea10: {" + AllAreas[9, i, 0] + ", " + AllAreas[9, i, 1] + ", " + AllAreas[9, i, 2]
+                + "}\nArea11: {" + AllAreas[10, i, 0] + ", " + AllAreas[10, i, 1] + ", " + AllAreas[10, i, 2] + "}\tArea12: {" + AllAreas[11, i, 0] + ", " + AllAreas[11, i, 1] + ", " + AllAreas[11, i, 2]
+                + "}\tArea13: {" + AllAreas[12, i, 0] + ", " + AllAreas[12, i, 1] + ", " + AllAreas[12, i, 2] + "}\tArea14: {" + AllAreas[13, i, 0] + ", " + AllAreas[13, i, 1] + ", " + AllAreas[13, i, 2]
+                + "}\tArea15: {" + AllAreas[14, i, 0] + ", " + AllAreas[14, i, 1] + ", " + AllAreas[14, i, 2] + "}\tArea16: {" + AllAreas[15, i, 0] + ", " + AllAreas[15, i, 1] + ", " + AllAreas[15, i, 2]
+                + "}\tArea17: {" + AllAreas[16, i, 0] + ", " + AllAreas[16, i, 1] + ", " + AllAreas[16, i, 2] + "}\tArea18: {" + AllAreas[17, i, 0] + ", " + AllAreas[17, i, 1] + ", " + AllAreas[17, i, 2]
+                + "}\tArea19: {" + AllAreas[18, i, 0] + ", " + AllAreas[18, i, 1] + ", " + AllAreas[18, i, 2] + "}\tArea20: {" + AllAreas[19, i, 0] + ", " + AllAreas[19, i, 1] + ", " + AllAreas[19, i, 2]
+                + "}\nArea21: {" + AllAreas[20, i, 0] + ", " + AllAreas[20, i, 1] + ", " + AllAreas[20, i, 2] + "}\tArea22: {" + AllAreas[21, i, 0] + ", " + AllAreas[21, i, 1] + ", " + AllAreas[21, i, 2]
+                + "}\tArea23: {" + AllAreas[22, i, 0] + ", " + AllAreas[22, i, 1] + ", " + AllAreas[22, i, 2] + "}\tArea24: {" + AllAreas[23, i, 0] + ", " + AllAreas[23, i, 1] + ", " + AllAreas[23, i, 2]
+                + "}\tArea25: {" + AllAreas[24, i, 0] + ", " + AllAreas[24, i, 1] + ", " + AllAreas[24, i, 2] + "}\tArea26: {" + AllAreas[25, i, 0] + ", " + AllAreas[25, i, 1] + ", " + AllAreas[25, i, 2]
+                + "}\tArea27: {" + AllAreas[26, i, 0] + ", " + AllAreas[26, i, 1] + ", " + AllAreas[26, i, 2] + "}\tArea28: {" + AllAreas[27, i, 0] + ", " + AllAreas[27, i, 1] + ", " + AllAreas[27, i, 2]
+                + "}\tArea29: {" + AllAreas[28, i, 0] + ", " + AllAreas[28, i, 1] + ", " + AllAreas[28, i, 2] + "}\tArea30: {" + AllAreas[29, i, 0] + ", " + AllAreas[29, i, 1] + ", " + AllAreas[29, i, 2]
+                + "}\nArea30: {" + AllAreas[30, i, 0] + ", " + AllAreas[30, i, 1] + ", " + AllAreas[30, i, 2] + "}\tArea32: {" + AllAreas[31, i, 0] + ", " + AllAreas[31, i, 1] + ", " + AllAreas[31, i, 2]
+                + "}\tArea33: {" + AllAreas[32, i, 0] + ", " + AllAreas[32, i, 1] + ", " + AllAreas[32, i, 2] + "}\tArea34: {" + AllAreas[33, i, 0] + ", " + AllAreas[33, i, 1] + ", " + AllAreas[33, i, 2]
+                + "}\tArea35: {" + AllAreas[34, i, 0] + ", " + AllAreas[34, i, 1] + ", " + AllAreas[34, i, 2] + "}\tArea36: {" + AllAreas[35, i, 0] + ", " + AllAreas[35, i, 1] + ", " + AllAreas[35, i, 2] 
+                + "}");
+        }
+        */
+        //color values for area floors. Current colores are in order: White, Yellow, Green, Blue, Red, Light Purple, rusty looking red, cyan, Pink, Black
+        float[,] Colors = { { 255, 255, 255 }, { 255, 255, 0 }, { 0, 255, 0 }, { 0, 0, 255 }, { 255, 0, 0 }, { 255, 100, 255 }, { 233, 79, 55 }, { 100, 255, 255 }, { 255, 150, 200 }, { 0, 0, 0 } };
+
+        int clr;
+        //this instantiates and colors floors for areas
+        for (int i = 0; i < GS; i++)
+        {
+            clr = i%10; //reuses colors used every 10 color instances
+            for (int k = i; k < GS; k++)
+            {
+                if ((AllAreas[i, k, 0] != 0 || AllAreas[i, k, 1] != 0 || AllAreas[i, k, 2] != 0) || (AllAreas[i, k, 2] == 0 && i == 0 && k ==0))
+                {
+                    //!!! importatnt if you change how the tiles are placed then here is where you change the stuff for floor placements !!!
+                    var FLR = Instantiate(Floor_W, new Vector3(24 * GRID[k, 0] + 12, 24 * GRID[k, 1] + 12, 1), Quaternion.identity);
+                    var objRenderer = FLR.GetComponentInChildren<Renderer>();
+                    objRenderer.material.color = new Color(Colors[clr, 0] / 255f, Colors[clr, 1] / 255f, Colors[clr, 2] / 255f);
+                }
+            }
+            //if (i == 10) limit how many areas are colred
+            //{
+            //    break;
+            //}
+        }
+
+
+    }
+    // Update is called once per frame
+    void Update()
+    {
+
+    }
+}
+
